@@ -300,6 +300,336 @@
     const correctEl = document.getElementById('score-correct');
     const wrongEl = document.getElementById('score-wrong');
 
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Викторина: Флаги субъектов РФ</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    .game-container {
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      text-align: center;
+      max-width: 560px;
+      width: 92%;
+    }
+
+    .info-panel {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      font-size: 24px;
+      color: #2c3e50;
+      margin: 0 0 16px 0;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin: 0 0 14px 0;
+      flex-wrap: wrap;
+      text-align: left;
+    }
+
+    .ctrl-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: #4a5568;
+    }
+
+    .pill {
+      background: #f7fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      color: #4a5568;
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      white-space: nowrap;
+    }
+
+    .pill strong { color: #2d3748; }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+      flex: 0 0 auto;
+    }
+
+    .switch input { display: none; }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: #cbd5e0;
+      transition: 0.2s;
+      border-radius: 999px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      top: 3px;
+      background-color: white;
+      transition: 0.2s;
+      border-radius: 50%;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    input:checked + .slider { background-color: #3182ce; }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    select {
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 8px 10px;
+      background: white;
+      color: #2d3748;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .flag-box {
+      background: #f8f9fa;
+      border: 2px solid #edf2f7;
+      border-radius: 12px;
+      height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 22px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #flag-image {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      object-position: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    #flag-status {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      color: #c53030;
+      background: rgba(248,249,250,0.85);
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    @media (min-width: 450px) {
+      .options-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    button {
+      padding: 15px 10px;
+      font-size: 14px;
+      font-weight: 500;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      background: white;
+      color: #4a5568;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 50px;
+    }
+
+    button:hover:not(:disabled) {
+      border-color: #3182ce;
+      background: #ebf8ff;
+    }
+
+    button:disabled {
+      cursor: default;
+      opacity: 0.75;
+    }
+
+    #result-message {
+      margin-top: 18px;
+      font-size: 18px;
+      font-weight: bold;
+      min-height: 27px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="game-container">
+    <div class="info-panel">
+      <span>Проект: География РФ</span>
+      <span id="total-count">Загрузка...</span>
+    </div>
+
+    <h1>Угадай регион по флагу</h1>
+
+    <div class="controls">
+      <div class="ctrl-group">
+        <span class="pill">
+          Счёт: ✅ <strong id="score-correct">0</strong> /
+          ❌ <strong id="score-wrong">0</strong>
+        </span>
+      </div>
+
+      <div class="ctrl-group">
+        <span>Время перехода</span>
+
+        <label class="switch" title="Включено: переход через время. Выключено: переход мгновенно.">
+          <input id="timer-toggle" type="checkbox" checked>
+          <span class="slider"></span>
+        </label>
+
+        <select id="delay-select" title="Задержка перед следующим вопросом (когда включено)">
+          <option value="1000">1 сек</option>
+          <option value="1500">1.5 сек</option>
+          <option value="2000" selected>2 сек</option>
+          <option value="3000">3 сек</option>
+          <option value="5000">5 сек</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="flag-box">
+      <img id="flag-image" src="" alt="">
+      <div id="flag-status">не грузит(</div>
+    </div>
+
+    <div id="options-grid" class="options-grid"></div>
+    <div id="result-message"></div>
+  </div>
+
+  <script>
+    const regions = [
+      { name: "Москва", local: "flags/moscow.png", remote: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Flag_of_Moscow%2C_Russia.svg/960px-Flag_of_Moscow%2C_Russia.svg.png" },
+      { name: "Санкт-Петербург", local: "flags/saint_petersburg.png", remote: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Flag_of_Saint_Petersburg%2C_Russia.svg/960px-Flag_of_Saint_Petersburg%2C_Russia.svg.png" },
+      { name: "Краснодарский край", local: "flags/krasnodar_krai.png", remote: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Flag_of_Krasnodar_Krai%2C_Russia.svg/960px-Flag_of_Krasnodar_Krai%2C_Russia.svg.png" },
+      { name: "Республика Татарстан", local: "flags/tatarstan.png", remote: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Flag_of_Tatarstan%2C_Russia.svg/960px-Flag_of_Tatarstan%2C_Russia.svg.png" },
+      { name: "Чеченская Республика", local: "flags/chechnya.png", remote: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Flag_of_Chechnya%2C_Russia.svg/960px-Flag_of_Chechnya%2C_Russia.svg.png" },
+      { name: "Республика Крым", local: "flags/crimea.png", remote: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Flag_of_Crimea%2C_Russia.svg/960px-Flag_of_Crimea%2C_Russia.svg.png" },
+      { name: "Свердловская область", local: "flags/sverdlovsk_oblast.png", remote: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Flag_of_Sverdlovsk_Oblast%2C_Russia.svg/960px-Flag_of_Sverdlovsk_Oblast%2C_Russia.svg.png" },
+      { name: "Новосибирская область", local: "flags/novosibirsk_oblast.png", remote: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Flag_of_Novosibirsk_Oblast%2C_Russia.svg/960px-Flag_of_Novosibirsk_Oblast%2C_Russia.svg.png" },
+      { name: "Приморский край", local: "flags/primorsky_krai.png", remote: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Flag_of_Primorsky_Krai%2C_Russia.svg/960px-Flag_of_Primorsky_Krai%2C_Russia.svg.png" },
+      { name: "Калининградская область", local: "flags/kaliningrad_oblast.png", remote: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Flag_of_Kaliningrad_Oblast%2C_Russia.svg/960px-Flag_of_Kaliningrad_Oblast%2C_Russia.svg.png" },
+      { name: "Республика Саха (Якутия)", local: "flags/sakha.png", remote: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Flag_of_Sakha%2C_Russia.svg/960px-Flag_of_Sakha%2C_Russia.svg.png" },
+      { name: "Республика Дагестан", local: "flags/dagestan.png", remote: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Flag_of_Dagestan%2C_Russia.svg/960px-Flag_of_Dagestan%2C_Russia.svg.png" },
+      { name: "Ростовская область", local: "flags/rostov_oblast.png", remote: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Flag_of_Rostov_Oblast%2C_Russia.svg/960px-Flag_of_Rostov_Oblast%2C_Russia.svg.png" },
+      { name: "Нижегородская область", local: "flags/nizhny_novgorod_oblast.png", remote: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Flag_of_Nizhny_Novgorod_Oblast%2C_Russia.svg/960px-Flag_of_Nizhny_Novgorod_Oblast%2C_Russia.svg.png" },
+      { name: "Самарская область", local: "flags/samara_oblast.png", remote: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Flag_of_Samara_Oblast%2C_Russia.svg/960px-Flag_of_Samara_Oblast%2C_Russia.svg.png" },
+      { name: "Красноярский край", local: "flags/krasnoyarsk_krai.png", remote: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Flag_of_Krasnoyarsk_Krai%2C_Russia.svg/960px-Flag_of_Krasnoyarsk_Krai%2C_Russia.svg.png" },
+      { name: "Ставропольский край", local: "flags/stavropol_krai.png", remote: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Flag_of_Stavropol_Krai%2C_Russia.svg/960px-Flag_of_Stavropol_Krai%2C_Russia.svg.png" },
+      { name: "Хабаровский край", local: "flags/khabarovsk_krai.png", remote: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Flag_of_Khabarovsk_Krai%2C_Russia.svg/960px-Flag_of_Khabarovsk_Krai%2C_Russia.svg.png" },
+      { name: "Иркутская область", local: "flags/irkutsk_oblast.png", remote: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/Flag_of_Irkutsk_Oblast%2C_Russia.svg/960px-Flag_of_Irkutsk_Oblast%2C_Russia.svg.png" },
+      { name: "Тюменская область", local: "flags/tyumen_oblast.png", remote: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Flag_of_Tyumen_Oblast%2C_Russia.svg/960px-Flag_of_Tyumen_Oblast%2C_Russia.svg.png" }
+    ];
+
+    document.getElementById('total-count').innerText = `Субъектов в базе: ${regions.length}`;
+
+    function setFlagImage(region) {
+      const imgEl = document.getElementById('flag-image');
+      const statusEl = document.getElementById('flag-status');
+
+      statusEl.style.display = "none";
+
+      let done = false;
+
+      const failTimer = setTimeout(() => {
+        if (done) return;
+        statusEl.style.display = "flex";
+      }, 1200);
+
+      const tryLoad = (url, onFail) => {
+        const tmp = new Image();
+        tmp.onload = () => {
+          if (done) return;
+          done = true;
+          clearTimeout(failTimer);
+          statusEl.style.display = "none";
+          imgEl.src = url;
+        };
+        tmp.onerror = onFail;
+        tmp.src = url;
+      };
+
+      tryLoad(region.local, () => {
+        tryLoad(region.remote, () => {
+          if (done) return;
+          done = true;
+          clearTimeout(failTimer);
+          statusEl.style.display = "flex";
+        });
+      });
+    }
+
+    let bag = [];
+
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function refillBag() {
+      bag = shuffle([...regions]);
+    }
+
+    function nextRegionNoRepeat() {
+      if (bag.length === 0) refillBag();
+      return bag.pop();
+    }
+
+    let correctCount = 0;
+    let wrongCount = 0;
+
+    const correctEl = document.getElementById('score-correct');
+    const wrongEl = document.getElementById('score-wrong');
+
     function updateScoreUI() {
       correctEl.innerText = String(correctCount);
       wrongEl.innerText = String(wrongCount);
@@ -383,6 +713,27 @@
 
         btn.style.background = "#f56565";
         btn.style.color = "white";
+        btn.style.borderColor = "#f56565";
+        resultMsg.innerText = "Ошибка! Это " + currentCorrect.name;
+        resultMsg.style.color = "#c53030";
+
+        allBtns.forEach(b => {
+          if (b.innerText === currentCorrect.name) {
+            b.style.borderColor = "#48bb78";
+            b.style.background = "#f0fff4";
+          }
+        });
+      }
+
+      scheduleNextQuestion();
+    }
+
+    refillBag();
+    updateScoreUI();
+    initGame();
+  </script>
+</body>
+</html>";
         btn.style.borderColor = "#f56565";
         resultMsg.innerText = "Ошибка! Это " + currentCorrect.name;
         resultMsg.style.color = "#c53030";
