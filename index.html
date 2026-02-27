@@ -257,23 +257,24 @@
 
     document.getElementById('total-count').innerText = `Субъектов в базе: ${regions.length}`;
 
-    // --- Загрузка флагов: local -> remote -> placeholder
     function setFlagImage(region) {
-      const img = document.getElementById('flag-image');
-      img.onerror = null;
+      const imgEl = document.getElementById('flag-image');
+      imgEl.src = PLACEHOLDER;
 
-      img.onerror = () => {
-        img.onerror = () => {
-          img.onerror = null;
-          img.src = PLACEHOLDER;
-        };
-        img.src = region.remote;
+      const tryLoad = (url, onFail) => {
+        const tmp = new Image();
+        tmp.onload = () => { imgEl.src = url; };
+        tmp.onerror = onFail;
+        tmp.src = url;
       };
 
-      img.src = region.local;
+      tryLoad(region.local, () => {
+        tryLoad(region.remote, () => {
+          imgEl.src = PLACEHOLDER;
+        });
+      });
     }
 
-    // --- Мешок без повторов
     let bag = [];
 
     function shuffle(arr) {
@@ -293,7 +294,6 @@
       return bag.pop();
     }
 
-    // --- Счёт
     let correctCount = 0;
     let wrongCount = 0;
 
@@ -305,9 +305,6 @@
       wrongEl.innerText = String(wrongCount);
     }
 
-    // --- Время перехода (как ты сказал):
-    // ВКЛ  -> ждём выбранное время
-    // ВЫКЛ -> мгновенно
     const timerToggle = document.getElementById('timer-toggle');
     const delaySelect = document.getElementById('delay-select');
 
@@ -323,13 +320,11 @@
     function scheduleNextQuestion() {
       clearNextTimer();
 
-      // ВЫКЛ: мгновенный переход
       if (!timerToggle.checked) {
         initGame();
         return;
       }
 
-      // ВКЛ: переход через время
       const delayMs = Number(delaySelect.value) || 2000;
       nextTimer = setTimeout(() => {
         nextTimer = null;
@@ -337,7 +332,6 @@
       }, delayMs);
     }
 
-    // --- Игра
     let currentCorrect;
 
     function initGame() {
@@ -404,7 +398,6 @@
       scheduleNextQuestion();
     }
 
-    // Старт
     refillBag();
     updateScoreUI();
     initGame();
